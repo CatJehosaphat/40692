@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<!-- saved from url=(0063)https://d1iw0d9rifrdkx.cloudfront.net/html/newFramePage-10.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <title></title>
+</head>
+
+<body>
+<script type="text/javascript">
+var receiver = function(message) {
+
+    var data = message.data;
+    if (!(typeof data == 'object')) {
+        return;
+    }
+
+    var COMMUNICATIONTYPE = {
+        SET: 1,
+        GET: 2,
+        SEND: 3
+    }
+
+    function getCookie(cks) {
+
+        var urlck = "zab_" + cks.key;
+
+        if (!cookieHandler.checkCookieExists(urlck)) {
+            return;
+        }
+
+        var urlcookie = JSON.parse(cookieHandler.getCookieValue(urlck));
+
+        var data = {};
+        data.type = COMMUNICATIONTYPE.GET;
+        data.value = urlcookie ? urlcookie : null;
+        data.callback = cks.callback;
+
+        cookieHandler.deleteCookie(urlck);
+        parent.postMessage(data, "*");
+    }
+
+    function setCookie(data) {
+
+        if (!(typeof data == 'object')) {
+            return;
+        }
+
+        for (var key in data) {
+            if (data.hasOwnProperty(key)) {
+                cookieHandler.setCookie("zab_" + key, data[key], 1);
+            }
+        }
+        parent.postMessage("", "*");
+    }
+
+    function sendData(data) {
+
+        if (!(typeof data == 'object')) {
+            return;
+        }
+
+        sendDataToServer(data.url, data.value);
+        parent.postMessage("", "*");
+    }
+
+    switch (data.type) {
+        case 1:
+            setCookie(data.cks);
+            break;
+        case 2:
+            getCookie(data.cks);
+            break;
+        case 3:
+            sendData(data._data);
+            break;
+        default:
+            break;
+    }
+
+}
+
+var sendDataToServer = function(url, data) {
+
+    function createCORSRequest(method, url) {
+
+        var xhr = new XMLHttpRequest();
+        if ("withCredentials" in xhr) {
+            xhr.open(method, url, true);
+        } else if (typeof XDomainRequest != "undefined") {
+            xhr = new XDomainRequest();
+            xhr.open(method, url);
+        } else {
+            xhr = null;
+        }
+        return xhr;
+    }
+
+    function makeCorsRequest(url, data) {
+
+        var xhr = createCORSRequest('POST', url); //NO I18N
+        try {
+            if (xhr) {
+                
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.send(data);
+                return;
+            }
+        } catch (e) {}
+    }
+
+    if (!url || !data) {
+        return;
+    }
+
+    makeCorsRequest(url,data);
+};
+
+
+var cookieHandler = {
+
+    setCookie: function(cname, cvalue, exp) {
+
+        var expires = "";
+        if (exp) {
+
+            var date = new Date();
+            date.setTime(date.getTime() + (exp * 24 * 60 * 60 * 1000));
+            expires = ";expires=" + date.toUTCString(); //No I18N
+        }
+
+        document.cookie = encodeURIComponent(cname) + "=" + encodeURIComponent(cvalue) + expires + ";path=/";
+
+    },
+    deleteCookie: function(name) {
+        document.cookie = encodeURIComponent(name) + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    },
+    getCookieValue: function(cname) {
+
+        var name = encodeURIComponent(cname) + "=";
+        var cookies = document.cookie;
+        var carray = cookies.split(';');
+
+        for (var i = 0; i < carray.length; i++) {
+
+            var cookie = carray[i];
+            while (cookie.charAt(0) == ' ') {
+                cookie = cookie.substring(1);
+            }
+            if (cookie.indexOf(name) == 0) {
+                return decodeURIComponent(cookie.substring(name.length, cookie.length));
+            }
+        }
+        return "";
+    },
+    checkCookieExists: function(cname) {
+
+        var cvalue = cookieHandler.getCookieValue(cname);
+        if (cvalue == "") {
+            return false;
+        }
+        return true;
+    }
+
+};
+
+if (window.addEventListener) {
+    window.addEventListener('message', receiver, false); // NO I18N
+} else { // NO I18N
+    window.attachEvent('onmessage', receiver); // NO I18N
+}
+</script>
+
+
+</body></html>
